@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../data/firebase/firestore_service.dart';
@@ -22,10 +23,8 @@ import '../../models/user_model.dart';
 /// - Autenticación: Firebase Authentication.
 ///
 /// Nota sobre login:
-/// Este adapter asume que `username` ingresado por la UI corresponde al `email`
-/// usado en FirebaseAuth. Si en tu proyecto real el usuario no es email,
-/// se requiere un campo adicional o tabla de mapeo (no está contemplado en la
-/// estructura Firestore solicitada).
+/// La UI siempre recibe `username`; Firestore resuelve el `email` asociado y
+/// FirebaseAuth autentica internamente con email/password.
 class FirestoreDatabaseAdapter extends ChangeNotifier {
   FirestoreDatabaseAdapter({
     FirestoreService? firestoreService,
@@ -182,9 +181,10 @@ final usersSnap = results[0];
 
       final doc = query.docs.first;
       final data = doc.data();
+      final profile = UserModel.fromMap(data, doc.id);
 
       // 2) Obtener email asociado en el documento
-      final email = (data['email'] ?? '').toString().trim();
+      final email = profile.email.trim();
       if (email.isEmpty) return null;
 
       // 3) Autenticar en FirebaseAuth con email/password
@@ -193,12 +193,9 @@ final usersSnap = results[0];
         password: password.trim(),
       );
 
-
-
       // 4) Devolver perfil desde Firestore
-      return UserModel.fromMap(data, doc.id);
-
-    } on FirebaseAuthException {
+      return profile;
+    } on FirebaseException {
       return null;
     }
   }
@@ -218,31 +215,39 @@ final usersSnap = results[0];
   Future<void> addAdmin({
     required String name,
     required String username,
+    required String email,
     required String password,
   }) async {
     await _refreshAll();
 
     final cleanName = name.trim();
     final cleanUsername = username.trim();
+    final cleanEmail = email.trim();
     final cleanPassword = password.trim();
-    if (cleanName.isEmpty || cleanUsername.isEmpty || cleanPassword.isEmpty) {
+    if (cleanName.isEmpty ||
+        cleanUsername.isEmpty ||
+        cleanEmail.isEmpty ||
+        cleanPassword.isEmpty) {
       return;
     }
 
-    final existing = _users.any((u) => u.username == cleanUsername);
+    final existing = _users.any(
+      (u) => u.username == cleanUsername || u.email == cleanEmail,
+    );
     if (existing) return;
 
     final id = _nextId(_users.map((item) => item.id));
 
     // Crear usuario en FirebaseAuth
     await _firebaseAuth.createUserWithEmailAndPassword(
-      email: cleanUsername,
+      email: cleanEmail,
       password: cleanPassword,
     );
 
     final user = UserModel(
       id: id,
       username: cleanUsername,
+      email: cleanEmail,
       fullName: cleanName,
       role: UserRole.admin,
     );
@@ -262,7 +267,7 @@ final usersSnap = results[0];
 
     // FirebaseAuth requiere conocer el email del usuario
     await _firebaseAuth
-        .signInWithEmailAndPassword(email: admin.username, password: password.trim());
+        .signInWithEmailAndPassword(email: admin.email, password: password.trim());
 
     // Nota: cambiar contraseña requiere volver a autenticar y usar updatePassword.
     // Para no romper la UI, este método se deja como no-op si no hay un flujo de update robusto.
@@ -445,6 +450,7 @@ final usersSnap = results[0];
   Future<void> addTeacher({
     required String name,
     required String username,
+    required String email,
     required String password,
     required List<String> groupIds,
   }) async {
@@ -452,21 +458,30 @@ final usersSnap = results[0];
 
     final cleanName = name.trim();
     final cleanUsername = username.trim();
-    if (cleanName.isEmpty || cleanUsername.isEmpty || password.trim().isEmpty) return;
+    final cleanEmail = email.trim();
+    if (cleanName.isEmpty ||
+        cleanUsername.isEmpty ||
+        cleanEmail.isEmpty ||
+        password.trim().isEmpty) {
+      return;
+    }
 
-    if (_users.any((user) => user.username == cleanUsername)) return;
+    if (_users.any((user) => user.username == cleanUsername || user.email == cleanEmail)) {
+      return;
+    }
 
     final id = _nextId(_users.map((item) => item.id));
 
     // Crear usuario en FirebaseAuth
     await _firebaseAuth.createUserWithEmailAndPassword(
-      email: cleanUsername,
+      email: cleanEmail,
       password: password.trim(),
     );
 
     final user = UserModel(
       id: id,
       username: cleanUsername,
+      email: cleanEmail,
       fullName: cleanName,
       role: UserRole.maestro,
       groupIds: groupIds,

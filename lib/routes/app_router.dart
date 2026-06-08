@@ -1,16 +1,37 @@
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../core/constants/app_routes.dart';
 import '../features/admin/admin_screen.dart';
+import '../features/auth/auth_controller.dart';
 import '../features/auth/login_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/reports/reports_screen.dart';
 import '../features/users/user_form_screen.dart';
 import '../features/users/users_screen.dart';
+import '../models/role_model.dart';
 
 class AppRouter {
   static final router = GoRouter(
     initialLocation: AppRoutes.login,
+    redirect: (context, state) {
+      final auth = context.read<AuthController>();
+      final location = state.uri.path;
+      final isLogin = location == AppRoutes.login;
+
+      if (!auth.isAuthenticated) {
+        return isLogin ? null : AppRoutes.login;
+      }
+
+      final role = auth.currentUser!.role;
+      if (isLogin) return _homeFor(role);
+
+      if (!_canAccess(role, location)) {
+        return _homeFor(role);
+      }
+
+      return null;
+    },
     routes: [
       GoRoute(
         path: AppRoutes.login,
@@ -40,4 +61,22 @@ class AppRouter {
       ),
     ],
   );
+
+  static String _homeFor(UserRole role) {
+    return switch (role) {
+      UserRole.superAdmin => AppRoutes.admin,
+      UserRole.admin => AppRoutes.dashboard,
+      UserRole.maestro => AppRoutes.reports,
+    };
+  }
+
+  static bool _canAccess(UserRole role, String location) {
+    return switch (role) {
+      UserRole.superAdmin => location == AppRoutes.admin,
+      UserRole.admin => location == AppRoutes.dashboard ||
+          location == AppRoutes.users ||
+          location == AppRoutes.userForm,
+      UserRole.maestro => location == AppRoutes.reports,
+    };
+  }
 }

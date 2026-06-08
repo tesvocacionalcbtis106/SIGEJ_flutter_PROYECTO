@@ -68,9 +68,11 @@ class OriginalHeader extends StatelessWidget {
             label: 'Cerrar sesion',
             foreground: AppColors.mutedText,
             background: AppColors.panel,
-            onPressed: () {
-              context.read<AuthController>().logout();
-              context.go(AppRoutes.login);
+            onPressed: () async {
+              await context.read<AuthController>().logout();
+              if (context.mounted) {
+                context.go(AppRoutes.login);
+              }
             },
           ),
         ],

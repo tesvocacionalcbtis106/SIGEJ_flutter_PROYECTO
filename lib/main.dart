@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
 
@@ -13,14 +13,17 @@ import 'features/auth/auth_controller.dart';
 import 'features/dashboard/dashboard_controller.dart';
 import 'features/reports/reports_controller.dart';
 import 'features/users/users_controller.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
 
 
-  // Inicializar Hive
-  await Hive.initFlutter();
+  // Inicializar Firebase antes de acceder a Auth o Firestore.
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Inicializar base de datos (Firestore)
   final database = FirestoreDatabaseAdapter();

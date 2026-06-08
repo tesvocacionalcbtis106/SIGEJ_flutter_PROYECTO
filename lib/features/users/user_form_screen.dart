@@ -30,15 +30,37 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-final database = context.watch<FirestoreDatabaseAdapter>();
+    final database = context.watch<FirestoreDatabaseAdapter>();
     final user = context.watch<AuthController>().currentUser;
+
+    if (database.students.isEmpty) {
+      return Scaffold(
+        body: Column(
+          children: [
+            OriginalHeader(
+              roleText: '⬛ ADMIN',
+              roleColor: AppColors.accent,
+              name: user?.fullName ?? 'Administrador',
+              backLabel: '← Alumnos',
+              onBack: () => context.go(AppRoutes.users),
+            ),
+            const Expanded(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
+      );
+    }
+
     final student = database.students.firstWhere(
       (item) => item.id == widget.studentId,
       orElse: () => database.students.first,
     );
     final group = database.groupName(student.groupId);
     final previous = database.justificationsByStudent(student.id);
-    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final now = DateTime.now();
+    final today = now.toIso8601String().substring(0, 10);
+    final displayDate = '${now.day}/${now.month}/${now.year}';
 
     return Scaffold(
       body: Column(
@@ -89,13 +111,13 @@ final database = context.watch<FirestoreDatabaseAdapter>();
                     ),
                     const SizedBox(height: 18),
                     const AccentSectionLabel('📅  RANGO DE FECHAS'),
-                    const Wrap(
+                    Wrap(
                       spacing: 12,
                       runSpacing: 8,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        _SmallDateBox(label: 'Desde:', value: '5 Junio 2026'),
-                        _SmallDateBox(label: 'Hasta:', value: '5 Junio 2026'),
+                        _SmallDateBox(label: 'Desde:', value: displayDate),
+                        _SmallDateBox(label: 'Hasta:', value: displayDate),
                       ],
                     ),
                     const AccentSectionLabel('⏰  HORARIO'),

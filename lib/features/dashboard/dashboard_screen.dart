@@ -13,7 +13,7 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-final database = context.watch<FirestoreDatabaseAdapter>();
+    final database = context.watch<FirestoreDatabaseAdapter>();
     final user = context.watch<AuthController>().currentUser;
     final colors = [
       AppColors.accent,
@@ -77,7 +77,7 @@ final database = context.watch<FirestoreDatabaseAdapter>();
                               icon: icons[index % icons.length],
                               color: color,
                               count: database.studentsByGroup(group.id).length,
-                              onTap: () => context.go(AppRoutes.users),
+                              onTap: () => context.go('${AppRoutes.users}?groupId=${group.id}'),
                             );
                           },
                         ),

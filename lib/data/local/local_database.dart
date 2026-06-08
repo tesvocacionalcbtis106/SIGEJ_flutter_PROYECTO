@@ -34,24 +34,28 @@ class LocalDatabase extends ChangeNotifier {
       const UserModel(
         id: '1',
         username: 'superadmin',
+        email: 'superadmin@sigej.local',
         fullName: 'Super Administrador',
         role: UserRole.superAdmin,
       ),
       const UserModel(
         id: '2',
         username: 'admin',
+        email: 'admin@sigej.local',
         fullName: 'Administrador General',
         role: UserRole.admin,
       ),
       const UserModel(
         id: '3',
         username: 'subdir',
+        email: 'subdir@sigej.local',
         fullName: 'Subdireccion',
         role: UserRole.admin,
       ),
       const UserModel(
         id: '4',
         username: 'maestro1',
+        email: 'maestro1@sigej.local',
         fullName: 'Prof. Ramirez Garcia, Jose',
         role: UserRole.maestro,
         groupIds: ['1', '2', '3'],
@@ -59,6 +63,7 @@ class LocalDatabase extends ChangeNotifier {
       const UserModel(
         id: '5',
         username: 'maestro2',
+        email: 'maestro2@sigej.local',
         fullName: 'Prof. Torres Vidal, Elena',
         role: UserRole.maestro,
         groupIds: ['2', '4', '6'],
@@ -224,6 +229,7 @@ class LocalDatabase extends ChangeNotifier {
       UserModel(
         id: id,
         username: cleanUsername,
+        email: cleanUsername,
         fullName: cleanName,
         role: UserRole.admin,
       ),
@@ -370,6 +376,7 @@ class LocalDatabase extends ChangeNotifier {
       UserModel(
         id: id,
         username: cleanUsername,
+        email: cleanUsername,
         fullName: cleanName,
         role: UserRole.maestro,
         groupIds: groupIds,
