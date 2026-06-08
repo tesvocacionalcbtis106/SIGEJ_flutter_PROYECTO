@@ -17,7 +17,7 @@ class UsersScreen extends StatefulWidget {
 
 class _UsersScreenState extends State<UsersScreen> {
   final _searchController = TextEditingController();
-  String _groupId = '1';
+  String? _groupId;
 
   @override
   void dispose() {
@@ -27,11 +27,41 @@ class _UsersScreenState extends State<UsersScreen> {
 
   @override
   Widget build(BuildContext context) {
-final database = context.watch<FirestoreDatabaseAdapter>();
+    final database = context.watch<FirestoreDatabaseAdapter>();
     final user = context.watch<AuthController>().currentUser;
+    final requestedGroupId = GoRouterState.of(context).uri.queryParameters['groupId'];
+
+    if (database.groups.isEmpty) {
+      return Scaffold(
+        body: Column(
+          children: [
+            OriginalHeader(
+              roleText: '⬛ ADMIN',
+              roleColor: AppColors.accent,
+              name: user?.fullName ?? 'Administrador',
+              backLabel: '← Grupos',
+              onBack: () => context.go(AppRoutes.dashboard),
+            ),
+            const Expanded(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_groupId == null &&
+        requestedGroupId != null &&
+        database.groups.any((group) => group.id == requestedGroupId)) {
+      _groupId = requestedGroupId;
+    }
+    if (_groupId == null ||
+        !database.groups.any((group) => group.id == _groupId)) {
+      _groupId = database.groups.isEmpty ? null : database.groups.first.id;
+    }
     final group = database.groups.firstWhere((item) => item.id == _groupId);
     final students = database
-        .studentsByGroup(_groupId)
+        .studentsByGroup(_groupId!)
         .where((student) =>
             student.name.toLowerCase().contains(_searchController.text.toLowerCase()))
         .toList();

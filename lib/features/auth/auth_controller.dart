@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../data/repositories/auth_repository.dart';
@@ -32,8 +33,12 @@ class AuthController extends ChangeNotifier {
     return true;
   }
 
-  void logout() {
-    currentUser = null;
-    notifyListeners();
+  Future<void> logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+    } finally {
+      currentUser = null;
+      notifyListeners();
+    }
   }
 }

@@ -590,6 +590,7 @@ Future<void> _showTeacherDialog(
 ) async {
   final nameController = TextEditingController();
   final usernameController = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final selectedGroups = <String>{
     if (database.groups.isNotEmpty) database.groups.first.id
@@ -612,6 +613,11 @@ Future<void> _showTeacherDialog(
             TextField(
               controller: usernameController,
               decoration: const InputDecoration(labelText: 'Usuario (login):'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Correo Firebase:'),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -656,6 +662,7 @@ Future<void> _showTeacherDialog(
           database.addTeacher(
             name: nameController.text,
             username: usernameController.text,
+            email: emailController.text,
             password: passwordController.text,
             groupIds: selectedGroups.toList(),
           );
@@ -672,6 +679,7 @@ Future<void> _showAdminDialog(
 ) async {
   final nameController = TextEditingController();
   final usernameController = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   await showDialog<void>(
@@ -693,6 +701,11 @@ Future<void> _showAdminDialog(
           ),
           const SizedBox(height: 8),
           TextField(
+            controller: emailController,
+            decoration: const InputDecoration(labelText: 'Correo Firebase:'),
+          ),
+          const SizedBox(height: 8),
+          TextField(
             controller: passwordController,
             obscureText: true,
             decoration: const InputDecoration(labelText: 'Contrasena:'),
@@ -703,6 +716,7 @@ Future<void> _showAdminDialog(
         database.addAdmin(
           name: nameController.text,
           username: usernameController.text,
+          email: emailController.text,
           password: passwordController.text,
         );
         Navigator.pop(dialogContext);

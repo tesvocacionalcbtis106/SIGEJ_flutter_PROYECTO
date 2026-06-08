@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/original_widgets.dart';
 import '../../data/firebase/firestore_database_adapter.dart';
 import '../auth/auth_controller.dart';
+import 'reports_controller.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -16,6 +17,7 @@ class ReportsScreen extends StatefulWidget {
 class _ReportsScreenState extends State<ReportsScreen> {
   final _filterController = TextEditingController();
   String? _groupId;
+  String? _loadedGroupId;
 
   @override
   void dispose() {
@@ -25,14 +27,24 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-final database = context.watch<FirestoreDatabaseAdapter>();
+    final database = context.watch<FirestoreDatabaseAdapter>();
+    final reports = context.watch<ReportsController>();
     final user = context.watch<AuthController>().currentUser;
     final groupIds = user?.groupIds.isEmpty == false ? user!.groupIds : ['1'];
     _groupId ??= groupIds.first;
     final groupName = database.groupName(_groupId!);
-    final justifications = database.justificationsByGroup(_groupId!);
-    final rows = justifications
-        .where((item) => database
+
+    if (_loadedGroupId != _groupId) {
+      _loadedGroupId = _groupId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _groupId != null) {
+          context.read<ReportsController>().loadByGroup(_groupId!);
+        }
+      });
+    }
+
+    final rows = reports.groupJustifications
+        .where((item) => reports
             .studentName(item.studentId)
             .toLowerCase()
             .contains(_filterController.text.toLowerCase()))
@@ -118,7 +130,7 @@ final database = context.watch<FirestoreDatabaseAdapter>();
                   for (var i = 0; i < rows.length; i++)
                     [
                       '${i + 1}',
-                      database.studentName(rows[i].studentId),
+                      reports.studentName(rows[i].studentId),
                       rows[i].startDate == rows[i].endDate
                           ? rows[i].startDate
                           : '${rows[i].startDate}  →  ${rows[i].endDate}',
