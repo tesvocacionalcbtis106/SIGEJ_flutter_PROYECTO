@@ -1,0 +1,11 @@
+{
+  "name": "SIGEJ",
+  "short_name": "SIGEJ",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#2563EB",
+  "description": "Sistema SIGEJ",
+  "orientation": "landscape-primary",
+  "prefer_related_applications": false
+}
